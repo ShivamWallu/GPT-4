@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatBot</title>
+    <style>
+        /* Existing styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        #chat-container {
+            width: 100%;
+            max-width: 400px; /* Adjust max-width as needed for phone screen */
+            margin: 0 auto;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative; /* Make container relative for absolute positioning */
+        }
+        #chat-box {
+            background-color: #f2f2f2;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 60px; /* Adjust margin to accommodate input */
+            overflow-y: auto; /* Make chat box scrollable */
+            max-height: calc(100vh - 160px); /* Adjust max-height for better visibility */
+            height: 600px;
+        }
+        .user-message {
+            text-align: right; /* Align user messages to the right */
+            color: #fff;
+            background-color: #007bff; /* Blue color for user messages */
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 5px; /* Add margin between messages */
+            clear: both; /* Clear floats */
+            float: right; /* Float user messages to the right */
+            max-width: 70%; /* Limit message width to 70% */
+        }
+        .bot-message {
+            text-align: left; /* Align bot messages to the left */
+            color: #333;
+            background-color: #e5e5ea; /* Light grey color for bot messages */
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 5px; /* Add margin between messages */
+            clear: both; /* Clear floats */
+            float: left; /* Float bot messages to the left */
+            max-width: 70%; /* Limit message width to 70% */
+        }
+        input[type="text"] {
+            width: calc(95% - 90px); /* Adjust width */
+            padding: 10px;
+            border: none; /* Remove default border */
+            border-radius: 20px; /* Add border radius */
+            box-sizing: border-box;
+            position: absolute;
+            bottom: 20px; /* Adjust bottom position as needed */
+            left: 20px; /* Adjust left position as needed */
+            outline: none; /* Remove outline */
+        }
+        button {
+            width: 70px;
+            padding: 10px;
+            border: none; /* Remove default border */
+            border-radius: 20px; /* Add border radius */
+            background-color: #4CAF50; /* Add background color */
+            color: white; /* Change text color */
+            font-size: 16px; /* Adjust font size */
+            position: absolute;
+            bottom: 20px; /* Adjust bottom position as needed */
+            right: 20px; /* Adjust right position as needed */
+            cursor: pointer; /* Add cursor pointer */
+            outline: none; /* Remove outline */
+        }
+        button:hover {
+            background-color: #45a049; /* Darker background color on hover */
+        }
+        /* Typing indicator animation */
+        @keyframes typing {
+            0% { width: 0; }
+            50% { width: 50%; }
+            100% { width: 100%; }
+        }
+
+        .typing-indicator {
+            margin-bottom: 5px;
+            overflow: hidden;
+            white-space: nowrap;
+            animation: typing 1s infinite;
+        }
+    
+    </style>
+    
+    
+    
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <input type="text" id="user-input" placeholder="Type your message here...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        function sendMessage() {
+            var userMessage = document.getElementById("user-input").value.trim(); // Trim whitespace
+            if (userMessage === '') {
+                return; // Exit function if input field is empty
+            }
+
+            document.getElementById("chat-box").innerHTML += "<p class='user-message'>" + userMessage + "</p>";
+            document.getElementById("chat-box").innerHTML += "<p class='bot-message typing-indicator'>Typing...</p>";
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/get_response", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                    var response = JSON.parse(xhr.responseText);
+                    var botResponse = response.bot_response;
+                    // Remove typing indicator
+                    var typingIndicator = document.querySelector('.typing-indicator');
+                    if (typingIndicator) {
+                        typingIndicator.parentNode.removeChild(typingIndicator);
+                    }
+                    // Display bot response with typewriter effect
+                    displayBotMessageWithTypewriter(botResponse);
+                    document.getElementById("user-input").value = ""; // Clear the input field
+                    document.getElementById("chat-box").scrollTop = document.getElementById("chat-box").scrollHeight;
+                }
+            };
+            xhr.send("user_message=" + encodeURIComponent(userMessage)); // Encode user message to handle emojis
+        }
+
+        // Function to display bot message with typewriter effect
+        function displayBotMessageWithTypewriter(message) {
+            var container = document.getElementById("chat-box");
+            var messageElement = document.createElement('p');
+            messageElement.className = 'bot-message';
+            container.appendChild(messageElement);
+
+            var i = 0;
+            var typingEffect = setInterval(function() {
+                messageElement.innerHTML += message.charAt(i);
+                i++;
+                if (i > message.length) {
+                    clearInterval(typingEffect);
+                }
+                container.scrollTop = container.scrollHeight;
+            }, 50); // Adjust the typing speed as needed (smaller value for faster typing)
+        }
+    </script>
+    
+    
+    
+    
+</body>
+</html>
